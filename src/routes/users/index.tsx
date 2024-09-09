@@ -1,5 +1,15 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Button, Input, Flex, Space, Table, Popover, Form } from 'antd'
+import {
+  Button,
+  Input,
+  Flex,
+  Space,
+  Table,
+  Popover,
+  Form,
+  Modal,
+  Typography,
+} from 'antd'
 import {
   SearchOutlined,
   PlusOutlined,
@@ -17,12 +27,15 @@ import UserForm, { FieldType } from '../../components/UserForm'
 import { balanceReducer, currency, generateUUID } from '../../utils'
 import moment from 'moment'
 
+const { Text } = Typography
+
 const UsersRootComponent = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false)
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
   const [initialData, setInitialData] = useState<FieldType | undefined>(
     undefined
   )
-  const [editId, setEditId] = useState<string | null>(null)
+  const [pickedId, setPickedId] = useState<string | null>(null)
   const { data, isLoading, deleteUser, addUser, getUser, updateUser } =
     useUserManagement()
   const [form] = Form.useForm()
@@ -98,7 +111,7 @@ const UsersRootComponent = () => {
                   type="text"
                   icon={<DeleteOutlined color="red" />}
                   onClick={() => {
-                    deleteUser(record.id)
+                    handleDelete(record.id)
                   }}
                 >
                   Delete
@@ -125,14 +138,14 @@ const UsersRootComponent = () => {
     if (isDrawerOpen) {
       form.resetFields()
       setInitialData(undefined)
-      setEditId(null)
+      setPickedId(null)
     }
     setIsDrawerOpen((prev) => !prev)
   }
 
   useEffect(() => {
-    if (editId) {
-      const user: User = getUser(editId)
+    if (pickedId) {
+      const user: User = getUser(pickedId)
       const initialData: FieldType = {
         id: user.id,
         firstName: user.profile.firstName,
@@ -145,11 +158,16 @@ const UsersRootComponent = () => {
       }
       setInitialData(initialData)
     }
-  }, [editId])
+  }, [pickedId])
 
   const handleEdit = (id: string) => {
-    setEditId(id)
+    setPickedId(id)
     toggleDrawer()
+  }
+
+  const handleDelete = (id: string) => {
+    setPickedId(id)
+    setIsModalOpen(true)
   }
 
   const onFinish = (values: FieldType) => {
@@ -186,6 +204,67 @@ const UsersRootComponent = () => {
         form={form}
         data={initialData}
       />
+      <Modal
+        title="Delete User"
+        centered
+        open={isModalOpen}
+        onOk={() => {
+          deleteUser(pickedId ?? '')
+          setIsModalOpen(false)
+          setPickedId(null)
+        }}
+        onCancel={() => setIsModalOpen(false)}
+      >
+        <p>Are you sure you want to delete this user?</p>
+        <div
+          style={{
+            width: '80%',
+            border: '1px solid green',
+            borderRadius: '16px',
+            padding: '16px',
+            marginBottom: '16px',
+          }}
+        >
+          <table>
+            <tr>
+              <td>
+                <Text type="secondary" strong>
+                  Full Name
+                </Text>
+              </td>
+              <td>
+                <Text
+                  strong
+                >{`${initialData?.firstName} ${initialData?.lastName}`}</Text>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <Text type="secondary" strong>
+                  E-mail
+                </Text>
+              </td>
+              <td>
+                <Text strong>{initialData?.email}</Text>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <Text type="secondary" strong>
+                  Phone Number
+                </Text>
+              </td>
+              <td>
+                <Text strong>+62{initialData?.phone}</Text>
+              </td>
+            </tr>
+          </table>
+        </div>
+        <Text strong>
+          The user will be removed from the system after receiving admin
+          approval.
+        </Text>
+      </Modal>
       <Space direction="vertical" size="middle" style={{ width: '100%' }}>
         <Flex justify="space-between" align="center">
           <Input
