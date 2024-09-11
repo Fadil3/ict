@@ -17,3 +17,37 @@ body {
   padding: 0px 100px;
   box-shadow: 0px 8px 20px 0px #6f7e7b4d;
 }
+
+th.ant-table-cell::before {
+  background-color: #999999 !important;
+}
+
+.transparent-table .ant-table {
+  background-color: transparent !important;
+}
+
+.transparent-table .ant-table-thead > tr > th {
+  background-color: transparent !important;
+  color: rgba(0, 0, 0, 0.45) !important;
+}
+
+.transparent-table .ant-table-tbody > tr > td {
+  background-color: transparent !important;
+}
+
+.transparent-table .ant-table-tbody > tr.ant-table-row:hover > td {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.ant-form-item {
+  margin-bottom: 12px !important;
+}
+
+.ant-form-item-label {
+  padding-bottom: 0px !important;
+}
+
+.ant-form-item-label .ant-typography {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+}
