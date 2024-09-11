@@ -44,7 +44,7 @@ const UsersRootComponent = () => {
     {
       title: 'No',
       key: 'no',
-      render: (_, record, index) => <span>{index + 1}</span>,
+      render: (_, __, index) => <span>{index + 1}</span>,
     },
     {
       title: 'Fullname',

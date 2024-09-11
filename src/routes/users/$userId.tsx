@@ -41,7 +41,7 @@ const UserDetailComponent = () => {
       title: 'No.',
       key: 'index',
       width: 50,
-      render: (text, record, index) => index + 1,
+      render: (_, __, index) => index + 1,
     },
     {
       title: 'Transaction ID',
@@ -127,7 +127,7 @@ const UserDetailComponent = () => {
       </fieldset>
       {user.financial?.accounts && user.financial.accounts.length > 0 ? (
         <Row gutter={[8, 8]}>
-          {user.financial.accounts.map((account, index) => (
+          {user.financial.accounts.map((account) => (
             <Col key={account.accountId} span={8}>
               <Card
                 style={{
