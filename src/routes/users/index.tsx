@@ -1,15 +1,8 @@
+import { useEffect, useState } from 'react'
+import dayjs from 'dayjs'
+
 import { createFileRoute, Link } from '@tanstack/react-router'
-import {
-  Button,
-  Input,
-  Flex,
-  Space,
-  Table,
-  Popover,
-  Form,
-  Modal,
-  Typography,
-} from 'antd'
+import { Button, Input, Flex, Space, Table, Popover, Form } from 'antd'
 import {
   SearchOutlined,
   PlusOutlined,
@@ -18,16 +11,13 @@ import {
   DeleteOutlined,
   EyeOutlined,
 } from '@ant-design/icons'
-import { useEffect, useState } from 'react'
-
 import type { TableProps } from 'antd'
+
 import useUserManagement from '../../hooks/useUserManagement'
-import { User } from '../../utils/users'
+import { Financial, User } from '../../utils/users'
 import UserForm, { FieldType } from '../../components/UserForm'
 import { balanceReducer, currency, generateUUID } from '../../utils'
-import moment from 'moment'
-
-const { Text } = Typography
+import DeleteUserModal from '../../components/DeleteUserModal'
 
 const UsersRootComponent = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false)
@@ -35,12 +25,27 @@ const UsersRootComponent = () => {
   const [initialData, setInitialData] = useState<FieldType | undefined>(
     undefined
   )
-  const [pickedId, setPickedId] = useState<string | null>(null)
-  const { data, isLoading, deleteUser, addUser, getUser, updateUser } =
-    useUserManagement()
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const {
+    data,
+    isLoading,
+    deleteUser,
+    addUser,
+    getUser,
+    updateUser,
+    searchUsers,
+  } = useUserManagement()
+
+  const filteredData = searchQuery ? searchUsers(searchQuery) : data
   const [form] = Form.useForm()
 
   const columns: TableProps<User>['columns'] = [
+    {
+      title: 'No',
+      key: 'no',
+      render: (_, record, index) => <span>{index + 1}</span>,
+    },
     {
       title: 'Fullname',
       key: 'fullname',
@@ -58,7 +63,7 @@ const UsersRootComponent = () => {
     {
       title: 'Phone Number',
       key: 'phone',
-      render: (_, record) => <span>0{record.profile.phone}</span>,
+      render: (_, record) => <span>+62{record.profile.phone}</span>,
     },
     {
       title: 'Total Balance',
@@ -83,7 +88,8 @@ const UsersRootComponent = () => {
                 <Button
                   size="small"
                   type="text"
-                  icon={<EyeOutlined color="blue" />}
+                  icon={<EyeOutlined />}
+                  style={{ color: '#1677ff' }}
                 >
                   <Link
                     to={`/users/$userId`}
@@ -96,9 +102,9 @@ const UsersRootComponent = () => {
                 </Button>
                 <Button
                   size="small"
-                  style={{ fontWeight: 'bold' }}
                   type="text"
                   icon={<EditOutlined />}
+                  style={{ color: '#fa8c16' }}
                   onClick={() => {
                     handleEdit(record.id)
                   }}
@@ -107,12 +113,12 @@ const UsersRootComponent = () => {
                 </Button>
                 <Button
                   size="small"
-                  style={{ fontWeight: 'bold' }}
                   type="text"
-                  icon={<DeleteOutlined color="red" />}
+                  icon={<DeleteOutlined />}
                   onClick={() => {
                     handleDelete(record.id)
                   }}
+                  danger
                 >
                   Delete
                 </Button>
@@ -138,40 +144,54 @@ const UsersRootComponent = () => {
     if (isDrawerOpen) {
       form.resetFields()
       setInitialData(undefined)
-      setPickedId(null)
+      setSelectedUser(null)
     }
     setIsDrawerOpen((prev) => !prev)
   }
 
   useEffect(() => {
-    if (pickedId) {
-      const user: User = getUser(pickedId)
+    if (selectedUser) {
       const initialData: FieldType = {
-        id: user.id,
-        firstName: user.profile.firstName,
-        lastName: user.profile.lastName,
-        username: user.username,
-        email: user.email,
-        phone: user.profile.phone,
-        gender: user.profile.gender,
-        birthdate: moment(user.profile.birthday),
+        id: selectedUser.id,
+        firstName: selectedUser.profile.firstName,
+        lastName: selectedUser.profile.lastName,
+        username: selectedUser.username,
+        email: selectedUser.email,
+        phone: selectedUser.profile.phone,
+        gender: selectedUser.profile.gender,
+        birthdate: dayjs(selectedUser.profile.birthday, 'DD/MM/YY'),
       }
       setInitialData(initialData)
+      form.setFieldsValue(initialData)
     }
-  }, [pickedId])
+  }, [selectedUser, form])
 
   const handleEdit = (id: string) => {
-    setPickedId(id)
-    toggleDrawer()
+    getUser(id).then((user) => {
+      setSelectedUser(user)
+      toggleDrawer()
+    })
   }
 
   const handleDelete = (id: string) => {
-    setPickedId(id)
-    setIsModalOpen(true)
+    getUser(id).then((user) => {
+      setSelectedUser(user)
+      setIsModalOpen(true)
+    })
   }
 
-  const onFinish = (values: FieldType) => {
-    const date = moment(values.birthdate).format('DD/MM/YY')
+  const handleDeleteConfirm = () => {
+    if (selectedUser) {
+      deleteUser(selectedUser.id)
+      setIsModalOpen(false)
+      setSelectedUser(null)
+    }
+  }
+
+  const onFinish = (values: FieldType, financial: Financial | null) => {
+    const date = values.birthdate
+      ? dayjs(values.birthdate).format('DD/MM/YY')
+      : ''
     const formData: User = {
       id: values.id ?? generateUUID(),
       username: values.username,
@@ -183,7 +203,7 @@ const UsersRootComponent = () => {
         birthday: date,
         phone: values.phone,
       },
-      financial: null,
+      financial: financial,
     }
 
     if (values.id) {
@@ -203,68 +223,14 @@ const UsersRootComponent = () => {
         onFinish={onFinish}
         form={form}
         data={initialData}
+        financial={selectedUser?.financial}
       />
-      <Modal
-        title="Delete User"
-        centered
-        open={isModalOpen}
-        onOk={() => {
-          deleteUser(pickedId ?? '')
-          setIsModalOpen(false)
-          setPickedId(null)
-        }}
-        onCancel={() => setIsModalOpen(false)}
-      >
-        <p>Are you sure you want to delete this user?</p>
-        <div
-          style={{
-            width: '80%',
-            border: '1px solid green',
-            borderRadius: '16px',
-            padding: '16px',
-            marginBottom: '16px',
-          }}
-        >
-          <table>
-            <tr>
-              <td>
-                <Text type="secondary" strong>
-                  Full Name
-                </Text>
-              </td>
-              <td>
-                <Text
-                  strong
-                >{`${initialData?.firstName} ${initialData?.lastName}`}</Text>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <Text type="secondary" strong>
-                  E-mail
-                </Text>
-              </td>
-              <td>
-                <Text strong>{initialData?.email}</Text>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <Text type="secondary" strong>
-                  Phone Number
-                </Text>
-              </td>
-              <td>
-                <Text strong>+62{initialData?.phone}</Text>
-              </td>
-            </tr>
-          </table>
-        </div>
-        <Text strong>
-          The user will be removed from the system after receiving admin
-          approval.
-        </Text>
-      </Modal>
+      <DeleteUserModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onDelete={handleDeleteConfirm}
+        user={selectedUser}
+      />
       <Space direction="vertical" size="middle" style={{ width: '100%' }}>
         <Flex justify="space-between" align="center">
           <Input
@@ -273,7 +239,9 @@ const UsersRootComponent = () => {
             prefix={<SearchOutlined />}
             style={{ width: '230px' }}
             allowClear
-            // onChange={}
+            onChange={(e) => {
+              setSearchQuery(e.target.value)
+            }}
           />
           <Button
             type="primary"
@@ -284,12 +252,24 @@ const UsersRootComponent = () => {
             Add
           </Button>
         </Flex>
-        <Table
-          columns={columns}
-          dataSource={data}
-          loading={isLoading}
-          rowKey="id"
-        />
+        <div
+          className=""
+          style={{
+            marginBottom: '20px',
+            borderRadius: '8px',
+            background:
+              'linear-gradient(180deg, #E7EDEB 0%, rgba(255, 255, 255, 0) 100%)',
+          }}
+        >
+          <Table
+            className="transparent-table"
+            columns={columns}
+            dataSource={filteredData}
+            loading={isLoading}
+            rowKey="id"
+            pagination={false}
+          />
+        </div>
       </Space>
     </>
   )

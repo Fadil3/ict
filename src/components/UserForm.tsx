@@ -1,9 +1,30 @@
-import { Button, DatePicker, Drawer, Flex, Form, Input, Select } from 'antd'
-import { CloseOutlined } from '@ant-design/icons'
+import { useEffect, useState, useRef, useCallback } from 'react'
 
+import {
+  Button,
+  DatePicker,
+  Drawer,
+  Flex,
+  Form,
+  Input,
+  Select,
+  Typography,
+  Space,
+} from 'antd'
+import {
+  CloseOutlined,
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from '@ant-design/icons'
 import type { FormInstance } from 'antd'
-import { useEffect } from 'react'
-import { MomentInput } from 'moment'
+import type { Dayjs } from 'dayjs'
+
+import { Account, Financial } from '../utils/users'
+import { currency } from '../utils'
+import DetailRow from './table/DetailRow'
+
+const { Text } = Typography
 
 export interface FieldType {
   firstName: string
@@ -12,7 +33,7 @@ export interface FieldType {
   email: string
   phone: string
   gender: string
-  birthdate?: MomentInput
+  birthdate?: Dayjs
   id?: string
 }
 
@@ -20,31 +41,116 @@ interface UserFormProps {
   isOpen: boolean
   toggle: () => void
   values?: FieldType
-  onFinish: (values: FieldType) => void
+  onFinish: (values: FieldType, financial: Financial | null) => void
   form: FormInstance
   data?: FieldType
+  financial?: Financial | null
 }
 
-const UserForm = ({ isOpen, toggle, onFinish, form, data }: UserFormProps) => {
+const UserForm = ({
+  isOpen,
+  toggle,
+  onFinish,
+  form,
+  data,
+  financial,
+}: UserFormProps) => {
+  const [accounts, setAccounts] = useState<Account[]>(financial?.accounts || [])
+  const [isAddingAccount, setIsAddingAccount] = useState(false)
+  const [editingAccountId, setEditingAccountId] = useState<string | null>(null)
+  const [accountForm] = Form.useForm()
+  const accountFormRef = useRef<HTMLDivElement>(null)
+  const resetAccountForm = useCallback(() => {
+    setIsAddingAccount(false)
+    setEditingAccountId(null)
+    accountForm.resetFields()
+  }, [accountForm])
+
   useEffect(() => {
-    if (data) {
-      form.setFieldsValue(data)
+    if (isOpen) {
+      if (data) {
+        form.setFieldsValue(data)
+      }
+      setAccounts(financial?.accounts || [])
+    } else {
+      resetAccountForm()
+      form.resetFields()
     }
-  }, [data, form])
+  }, [isOpen, data, form, financial, resetAccountForm])
+
+  const handleAccountFormSubmit = (values: Account) => {
+    const newAccount: Account = {
+      accountId: values.accountId,
+      accountType: values.accountType,
+      balance: parseFloat(values.balance.toString()),
+      transactions: [],
+    }
+
+    if (editingAccountId) {
+      setAccounts(
+        accounts.map((a) => (a.accountId === editingAccountId ? newAccount : a))
+      )
+    } else {
+      setAccounts([...accounts, newAccount])
+    }
+
+    setIsAddingAccount(false)
+    setEditingAccountId(null)
+    accountForm.resetFields()
+  }
+
+  const handleDeleteAccount = (accountId: string) => {
+    setAccounts(accounts.filter((a) => a.accountId !== accountId))
+  }
+
+  const handleEditAccount = (account: Account) => {
+    setEditingAccountId(account.accountId)
+    setIsAddingAccount(true)
+    accountForm.setFieldsValue(account)
+
+    setTimeout(() => {
+      accountFormRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    }, 100)
+  }
+
+  const handleFormSubmit = (values: FieldType) => {
+    const updatedFinancial: Financial | null =
+      accounts.length > 0 ? { accounts } : null
+    onFinish(values, updatedFinancial)
+  }
+
+  const handleDrawerClose = () => {
+    resetAccountForm()
+    toggle()
+  }
+
   return (
     <Drawer closable={false} open={isOpen}>
       <Flex justify="space-between" align="center">
-        <p>Add New User</p>
-        <Button icon={<CloseOutlined />} type="text" onClick={toggle} />
+        <Text
+          strong
+          style={{ fontSize: '24px', color: '#4B7273', width: 'fit-content' }}
+        >
+          {data ? 'Edit User' : 'Add New User'}
+        </Text>
+        <Button
+          icon={<CloseOutlined />}
+          type="text"
+          onClick={handleDrawerClose}
+        />
       </Flex>
       <Form
         name="basic"
         layout="vertical"
         clearOnDestroy={true}
-        onFinish={onFinish}
+        onFinish={handleFormSubmit}
         form={form}
         preserve={false}
         scrollToFirstError={true}
+        style={{ marginTop: '20px' }}
       >
         <Form.Item<FieldType>
           label="id"
@@ -55,28 +161,28 @@ const UserForm = ({ isOpen, toggle, onFinish, form, data }: UserFormProps) => {
           <Input />
         </Form.Item>
         <Form.Item<FieldType>
-          label="First Name"
+          label={<Text strong>First Name</Text>}
           name="firstName"
           rules={[{ required: true, message: 'Please input your first name!' }]}
         >
-          <Input />
+          <Input placeholder="Please input your first name!" />
         </Form.Item>
         <Form.Item<FieldType>
-          label="Last Name"
+          label={<Text strong>Last Name</Text>}
           name="lastName"
           rules={[{ required: true, message: 'Please input your last name!' }]}
         >
-          <Input />
+          <Input placeholder="Please input your last name!" />
         </Form.Item>
         <Form.Item<FieldType>
-          label="Username"
+          label={<Text strong>Username</Text>}
           name="username"
           rules={[{ required: true, message: 'Please input your username!' }]}
         >
-          <Input />
+          <Input placeholder="Please input your username!" />
         </Form.Item>
         <Form.Item<FieldType>
-          label="Email"
+          label={<Text strong>Email</Text>}
           name="email"
           rules={[
             {
@@ -89,10 +195,10 @@ const UserForm = ({ isOpen, toggle, onFinish, form, data }: UserFormProps) => {
             },
           ]}
         >
-          <Input />
+          <Input placeholder="Please input your E-mail!" />
         </Form.Item>
         <Form.Item<FieldType>
-          label="Phone Number"
+          label={<Text strong>Phone Number</Text>}
           name="phone"
           rules={[
             {
@@ -101,10 +207,13 @@ const UserForm = ({ isOpen, toggle, onFinish, form, data }: UserFormProps) => {
             },
           ]}
         >
-          <Input addonBefore="+62" />
+          <Input
+            addonBefore="+62"
+            placeholder="Please input your phone number!"
+          />
         </Form.Item>
         <Form.Item<FieldType>
-          label="Gender"
+          label={<Text strong>Gender</Text>}
           name="gender"
           rules={[
             {
@@ -114,6 +223,7 @@ const UserForm = ({ isOpen, toggle, onFinish, form, data }: UserFormProps) => {
           ]}
         >
           <Select
+            placeholder="Please select your gender!"
             options={[
               { value: 'male', label: 'Male' },
               { value: 'female', label: 'Female' },
@@ -121,7 +231,7 @@ const UserForm = ({ isOpen, toggle, onFinish, form, data }: UserFormProps) => {
           />
         </Form.Item>
         <Form.Item<FieldType>
-          label="Birthdate"
+          label={<Text strong>Birthdate</Text>}
           name="birthdate"
           rules={[
             {
@@ -130,27 +240,150 @@ const UserForm = ({ isOpen, toggle, onFinish, form, data }: UserFormProps) => {
             },
           ]}
         >
-          <DatePicker style={{ width: '100%' }} format="DD/MM/YY" />
+          <DatePicker
+            style={{ width: '100%' }}
+            format="DD/MM/YY"
+            placeholder="DD/MM/YY"
+          />
         </Form.Item>
-
+        <hr
+          style={{
+            border: '1px solid #4B7273',
+            width: '100%',
+            margin: '24px 0',
+          }}
+        />
+        <Text
+          strong
+          style={{
+            fontSize: '24px',
+            color: '#4B7273',
+            width: 'fit-content',
+            marginBottom: '16px',
+            display: 'block',
+          }}
+        >
+          Account Details
+        </Text>
+        <Form.Item>
+          {accounts.map((account) => (
+            <div
+              key={account.accountId}
+              style={{
+                border: '1px solid #B3B3B3',
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '16px',
+              }}
+            >
+              <table cellPadding="8" cellSpacing="0" style={{ width: '100%' }}>
+                <tbody>
+                  <DetailRow label="Account ID" value={account.accountId} />
+                  <DetailRow label="Account Type" value={account.accountType} />
+                  <DetailRow
+                    label="Balance"
+                    value={currency(account.balance)}
+                  />
+                </tbody>
+              </table>
+              <Space direction="vertical" size="small">
+                <Button
+                  type="text"
+                  icon={<EditOutlined />}
+                  onClick={() => handleEditAccount(account)}
+                />
+                <Button
+                  type="text"
+                  icon={<DeleteOutlined />}
+                  danger
+                  onClick={() => handleDeleteAccount(account.accountId)}
+                />
+              </Space>
+            </div>
+          ))}
+          <div ref={accountFormRef}>
+            {isAddingAccount && (
+              <Form
+                form={accountForm}
+                layout="vertical"
+                onFinish={handleAccountFormSubmit}
+                style={{ marginBottom: '16px' }}
+              >
+                <Form.Item
+                  name="accountId"
+                  label={<Text strong>Account ID</Text>}
+                  rules={[
+                    { required: true, message: 'Please input the account ID' },
+                  ]}
+                >
+                  <Input />
+                </Form.Item>
+                <Form.Item
+                  name="accountType"
+                  label={<Text strong>Account Type</Text>}
+                  rules={[
+                    {
+                      required: true,
+                      message: 'Please select an account type',
+                    },
+                  ]}
+                >
+                  <Select>
+                    <Select.Option value="savings">Savings</Select.Option>
+                    <Select.Option value="checking">Checking</Select.Option>
+                    <Select.Option value="credit">Credit</Select.Option>
+                  </Select>
+                </Form.Item>
+                <Form.Item
+                  name="balance"
+                  label={<Text strong>Balance</Text>}
+                  rules={[
+                    { required: true, message: 'Please enter the balance' },
+                  ]}
+                >
+                  <Input
+                    placeholder="Please enter the balance"
+                    prefix="Rp."
+                    type="number"
+                    step="0.01"
+                    style={{ width: '100%' }}
+                  />
+                </Form.Item>
+                <Button
+                  type="primary"
+                  onClick={() => accountForm.submit()}
+                  style={{ width: '100%' }}
+                >
+                  {editingAccountId ? 'Save' : 'Add Account'}
+                </Button>
+              </Form>
+            )}
+          </div>
+          {!isAddingAccount && (
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => setIsAddingAccount(true)}
+              style={{ width: '100%' }}
+            >
+              Add Account
+            </Button>
+          )}
+        </Form.Item>
         <Form.Item>
           <Flex justify="center" gap="14px" align="center">
             <Button
-              style={{
-                width: '150px',
-              }}
-              type="dashed"
-              onClick={toggle}
+              style={{ width: '150px' }}
+              type="default"
+              onClick={handleDrawerClose}
             >
               Cancel
             </Button>
-            <Button
-              style={{
-                width: '150px',
-              }}
-              type="primary"
-              htmlType="submit"
-            >
+            <Button style={{ width: '150px' }} type="primary" htmlType="submit">
               {data ? 'Save' : 'Add'}
             </Button>
           </Flex>
