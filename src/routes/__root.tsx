@@ -13,7 +13,7 @@ import BreadCrumbGenerator from '../components/BreadCrumbItems'
 const { Header, Content, Footer } = Layout
 
 const TanStackRouterDevtools =
-  import.meta.env.NODE_ENV === 'production'
+  import.meta.env.VITE_NODE_ENV === 'production'
     ? () => null // Render nothing in production
     : React.lazy(() =>
         // Lazy load in development
