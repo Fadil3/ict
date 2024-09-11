@@ -6,7 +6,7 @@ const useUserManagement = () => {
   const { isLoading, error, data } = useQuery({
     queryKey: ['users'],
     queryFn: () =>
-      fetch(`${import.meta.env.VITE_API_BASE_URL}/users/`).then(async (res) => {
+      fetch(`${import.meta.env.VITE_API_BASE_URL}`).then(async (res) => {
         const data: ResponseUsers = await res.json()
         localStorage.setItem('users', JSON.stringify(data))
         return data.content.map((content) => content.user)
@@ -58,9 +58,7 @@ const useUserManagement = () => {
       if (user) return user
     }
 
-    const response = await fetch(
-      `${import.meta.env.VITE_API_BASE_URL}/users/${userId}`
-    )
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}`)
     const data: { user: User } = await response.json()
     return data.user
   }
