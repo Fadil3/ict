@@ -1,4 +1,4 @@
-import { Breadcrumb, Layout } from 'antd'
+import { Breadcrumb, ConfigProvider, Layout } from 'antd'
 import {
   createRootRouteWithContext,
   Outlet,
@@ -29,28 +29,37 @@ const RootComponent = () => {
   )
   return (
     <>
-      <Layout>
-        <Header className="header">
-          <img src={logo} alt="Inti Corp Teknologi" width={160} height={50} />
-        </Header>
-        <Content style={{ padding: '50px 100px', backgroundColor: 'white' }}>
-          <Breadcrumb items={breadcrumbItems} />
-          <div
-            style={{
-              minHeight: 280,
-              paddingTop: '20px',
-            }}
-          >
-            <Outlet />
-          </div>
-        </Content>
-        <Footer style={{ textAlign: 'center' }}>
-          Ant Design ©{new Date().getFullYear()} Created by Ant UED
-        </Footer>
-      </Layout>
-      <Suspense>
-        <TanStackRouterDevtools />
-      </Suspense>
+      <ConfigProvider
+        theme={{
+          token: {
+            colorPrimary: '#4B7273',
+          },
+        }}
+      >
+        <Layout>
+          <Header className="header">
+            <img src={logo} alt="Inti Corp Teknologi" width={160} height={50} />
+          </Header>
+          <Content style={{ padding: '50px 100px', backgroundColor: 'white' }}>
+            <Breadcrumb items={breadcrumbItems} />
+            <div
+              style={{
+                minHeight: 280,
+                paddingTop: '20px',
+              }}
+            >
+              <Outlet />
+            </div>
+          </Content>
+          <Footer style={{ textAlign: 'center' }}>
+            Ant Design ©{new Date().getFullYear()} Created by Ant UED |
+            mrayhanfadil @ Inti Tech Corpora
+          </Footer>
+        </Layout>
+        <Suspense>
+          <TanStackRouterDevtools />
+        </Suspense>
+      </ConfigProvider>
     </>
   )
 }

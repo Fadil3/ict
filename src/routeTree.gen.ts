@@ -13,12 +13,12 @@ import { createFileRoute } from '@tanstack/react-router'
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as UsersIndexImport } from './routes/users/index'
 import { Route as UsersUserIdImport } from './routes/users/$userId'
 
 // Create Virtual Routes
 
 const IndexLazyImport = createFileRoute('/')()
-const UsersIndexLazyImport = createFileRoute('/users/')()
 
 // Create/Update Routes
 
@@ -27,10 +27,10 @@ const IndexLazyRoute = IndexLazyImport.update({
   getParentRoute: () => rootRoute,
 } as any).lazy(() => import('./routes/index.lazy').then((d) => d.Route))
 
-const UsersIndexLazyRoute = UsersIndexLazyImport.update({
+const UsersIndexRoute = UsersIndexImport.update({
   path: '/users/',
   getParentRoute: () => rootRoute,
-} as any).lazy(() => import('./routes/users/index.lazy').then((d) => d.Route))
+} as any)
 
 const UsersUserIdRoute = UsersUserIdImport.update({
   path: '/users/$userId',
@@ -59,7 +59,7 @@ declare module '@tanstack/react-router' {
       id: '/users/'
       path: '/users'
       fullPath: '/users'
-      preLoaderRoute: typeof UsersIndexLazyImport
+      preLoaderRoute: typeof UsersIndexImport
       parentRoute: typeof rootRoute
     }
   }
@@ -70,20 +70,20 @@ declare module '@tanstack/react-router' {
 export interface FileRoutesByFullPath {
   '/': typeof IndexLazyRoute
   '/users/$userId': typeof UsersUserIdRoute
-  '/users': typeof UsersIndexLazyRoute
+  '/users': typeof UsersIndexRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexLazyRoute
   '/users/$userId': typeof UsersUserIdRoute
-  '/users': typeof UsersIndexLazyRoute
+  '/users': typeof UsersIndexRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexLazyRoute
   '/users/$userId': typeof UsersUserIdRoute
-  '/users/': typeof UsersIndexLazyRoute
+  '/users/': typeof UsersIndexRoute
 }
 
 export interface FileRouteTypes {
@@ -98,13 +98,13 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexLazyRoute: typeof IndexLazyRoute
   UsersUserIdRoute: typeof UsersUserIdRoute
-  UsersIndexLazyRoute: typeof UsersIndexLazyRoute
+  UsersIndexRoute: typeof UsersIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexLazyRoute: IndexLazyRoute,
   UsersUserIdRoute: UsersUserIdRoute,
-  UsersIndexLazyRoute: UsersIndexLazyRoute,
+  UsersIndexRoute: UsersIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -131,7 +131,7 @@ export const routeTree = rootRoute
       "filePath": "users/$userId.tsx"
     },
     "/users/": {
-      "filePath": "users/index.lazy.tsx"
+      "filePath": "users/index.tsx"
     }
   }
 }

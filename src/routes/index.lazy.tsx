@@ -1,4 +1,6 @@
-import { createLazyFileRoute } from '@tanstack/react-router'
+import { createLazyFileRoute, Link } from '@tanstack/react-router'
+import { Button } from 'antd'
+import { UserOutlined } from '@ant-design/icons'
 
 export const Route = createLazyFileRoute('/')({
   component: Index,
@@ -7,7 +9,9 @@ export const Route = createLazyFileRoute('/')({
 function Index() {
   return (
     <div className="p-2">
-      <h3>Welcome Home!</h3>
+      <Button icon={<UserOutlined />}>
+        <Link to="/users">Users Management</Link>
+      </Button>
     </div>
   )
 }

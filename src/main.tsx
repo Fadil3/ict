@@ -18,7 +18,7 @@ const router = createRouter({
   defaultPendingComponent: () => <Spin />,
   defaultErrorComponent:
     () =>
-    ({ error }) => <ErrorComponent error={error} />,
+    ({ error }: any) => <ErrorComponent error={error} />,
   context: {
     queryClient,
   },
