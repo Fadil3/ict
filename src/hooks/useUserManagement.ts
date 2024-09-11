@@ -6,7 +6,7 @@ const useUserManagement = () => {
   const { isLoading, error, data } = useQuery({
     queryKey: ['users'],
     queryFn: () =>
-      fetch(`${import.meta.env.VITE_API_BASE_URL}/users`).then(async (res) => {
+      fetch(`${import.meta.env.VITE_API_BASE_URL}/users/`).then(async (res) => {
         const data: ResponseUsers = await res.json()
         localStorage.setItem('users', JSON.stringify(data))
         return data.content.map((content) => content.user)
@@ -59,7 +59,10 @@ const useUserManagement = () => {
     }
 
     const response = await fetch(
-      `${import.meta.env.VITE_API_BASE_URL}/users/${userId}`
+      `${import.meta.env.VITE_API_BASE_URL}/users/${userId}/`,
+      {
+        referrerPolicy: 'unsafe-url',
+      }
     )
     const data: { user: User } = await response.json()
     return data.user
