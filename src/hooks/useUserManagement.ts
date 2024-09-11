@@ -59,10 +59,7 @@ const useUserManagement = () => {
     }
 
     const response = await fetch(
-      `${import.meta.env.VITE_API_BASE_URL}/users/${userId}/`,
-      {
-        referrerPolicy: 'unsafe-url',
-      }
+      `${import.meta.env.VITE_API_BASE_URL}/users/${userId}`
     )
     const data: { user: User } = await response.json()
     return data.user
