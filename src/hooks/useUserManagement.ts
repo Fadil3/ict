@@ -50,9 +50,26 @@ const useUserManagement = () => {
     })
   }
 
-  const getUser = (userId: string): User => {
+  const getUser = async (userId: string): Promise<User> => {
+    const users: User[] | undefined = queryClient.getQueryData(['users'])
+
+    if (users) {
+      const user = users.find((user) => user.id === userId)
+      if (user) return user
+    }
+
+    const response = await fetch(
+      `${import.meta.env.VITE_API_BASE_URL}/users/${userId}`
+    )
+    const data: { user: User } = await response.json()
+    return data.user
+  }
+
+  const searchUsers = (query: string): User[] => {
     const users: User[] = queryClient.getQueryData(['users']) || []
-    return users.filter((user) => user.id === userId)[0]
+    return users.filter((user) =>
+      user.email.toLowerCase().includes(query.toLowerCase())
+    )
   }
 
   const updateLocalStorage = (updatedUsers: User[]) => {
@@ -71,7 +88,16 @@ const useUserManagement = () => {
     localStorage.setItem('users', JSON.stringify(localUsers))
   }
 
-  return { data, error, isLoading, addUser, updateUser, deleteUser, getUser }
+  return {
+    data,
+    error,
+    isLoading,
+    addUser,
+    updateUser,
+    deleteUser,
+    getUser,
+    searchUsers,
+  }
 }
 
 export default useUserManagement
