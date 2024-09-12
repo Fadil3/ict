@@ -89,7 +89,12 @@ const UserForm = ({
 
     if (editingAccountId) {
       setAccounts(
-        accounts.map((a) => (a.accountId === editingAccountId ? newAccount : a))
+        accounts.map((a) => {
+          if (a.accountId === editingAccountId) {
+            return { ...newAccount, transactions: a.transactions }
+          }
+          return a
+        })
       )
     } else {
       setAccounts([...accounts, newAccount])
