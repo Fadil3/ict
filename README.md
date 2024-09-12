@@ -18,4 +18,4 @@ VITE_NODE_ENV = 'production'
 - run with `yarn dev`
 
 ## Live Access
-[https://ict.mrayhanfadil.my.id/users](https://ict.mrayhanfadil.my.id/users)
+[https://ict.mrayhanfadil.my.id/users](https://ict.mrayhanfadil.my.id/users) or [https://ict-mrayhanfadil.vercel.app/users](https://ict-mrayhanfadil.vercel.app/users)
