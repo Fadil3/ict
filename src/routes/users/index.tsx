@@ -187,6 +187,7 @@ const UsersRootComponent = () => {
       deleteUser(selectedUser.id)
       setIsModalOpen(false)
       setSelectedUser(null)
+      setInitialData(undefined)
     }
   }
 
