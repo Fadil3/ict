@@ -10,6 +10,7 @@ import {
   Select,
   Typography,
   Space,
+  Popconfirm,
 } from 'antd'
 import {
   CloseOutlined,
@@ -296,12 +297,14 @@ const UserForm = ({
                   icon={<EditOutlined />}
                   onClick={() => handleEditAccount(account)}
                 />
-                <Button
-                  type="text"
-                  icon={<DeleteOutlined />}
-                  danger
-                  onClick={() => handleDeleteAccount(account.accountId)}
-                />
+                <Popconfirm
+                  title="Are you sure you want to delete this account?"
+                  onConfirm={() => handleDeleteAccount(account.accountId)}
+                  okText="Yes"
+                  cancelText="No"
+                >
+                  <Button type="text" icon={<DeleteOutlined />} danger />
+                </Popconfirm>
               </Space>
             </div>
           ))}

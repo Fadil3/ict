@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import dayjs from 'dayjs'
 
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Button, Input, Flex, Space, Table, Popover, Form } from 'antd'
+import { Button, Input, Flex, Space, Table, Popover, Form, Spin } from 'antd'
 import {
   SearchOutlined,
   PlusOutlined,
@@ -15,9 +15,11 @@ import type { TableProps } from 'antd'
 
 import useUserManagement from '../../hooks/useUserManagement'
 import { Financial, User } from '../../utils/users'
-import UserForm, { FieldType } from '../../components/UserForm'
+
 import { balanceReducer, currency, generateUUID } from '../../utils'
-import DeleteUserModal from '../../components/DeleteUserModal'
+import { FieldType } from '../../components/UserForm'
+const UserForm = lazy(() => import('../../components/UserForm'))
+const DeleteUserModal = lazy(() => import('../../components/DeleteUserModal'))
 
 const UsersRootComponent = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false)
@@ -217,20 +219,22 @@ const UsersRootComponent = () => {
 
   return (
     <>
-      <UserForm
-        isOpen={isDrawerOpen}
-        toggle={toggleDrawer}
-        onFinish={onFinish}
-        form={form}
-        data={initialData}
-        financial={selectedUser?.financial}
-      />
-      <DeleteUserModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onDelete={handleDeleteConfirm}
-        user={selectedUser}
-      />
+      <Suspense fallback={<Spin />}>
+        <UserForm
+          isOpen={isDrawerOpen}
+          toggle={toggleDrawer}
+          onFinish={onFinish}
+          form={form}
+          data={initialData}
+          financial={selectedUser?.financial}
+        />
+        <DeleteUserModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onDelete={handleDeleteConfirm}
+          user={selectedUser}
+        />
+      </Suspense>
       <Space direction="vertical" size="middle" style={{ width: '100%' }}>
         <Flex justify="space-between" align="center">
           <Input
